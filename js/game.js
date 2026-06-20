@@ -134,12 +134,15 @@ function generateCardDefs() {
     },
   };
 
-  // アクションカード8枚: コスト帯 2+3+2+1 でランダム選択
+  // アクションカード8枚: コスト帯 2+3+2+1 でランダム選択（costを付与）
+  function addCost(arr, cost) {
+    return arr.map(function(e) { return Object.assign({ cost: cost }, e); });
+  }
   var picked = shuffle(
-    _pickN(_EFFECT_POOL.c3, 2).concat(
-    _pickN(_EFFECT_POOL.c4, 3),
-    _pickN(_EFFECT_POOL.c5, 2),
-    _pickN(_EFFECT_POOL.c6, 1))
+    addCost(_pickN(_EFFECT_POOL.c3, 2), 3).concat(
+    addCost(_pickN(_EFFECT_POOL.c4, 3), 4),
+    addCost(_pickN(_EFFECT_POOL.c5, 2), 5),
+    addCost(_pickN(_EFFECT_POOL.c6, 1), 6))
   );
   var usedNames = {};
   for (var i = 0; i < _ACTION_SLOT_IDS.length; i++) {
@@ -391,6 +394,19 @@ class GameState {
     if (this.phase !== PHASE.ACTION) return;
     this.phase = PHASE.BUY;
     this.addLog('── 購入フェーズ ──');
+    // 手札の財宝を自動プレイ
+    const treasures = this.player.hand.filter(
+      c => c.type === TYPE.TREASURE || c.type === TYPE.STARTING
+    );
+    for (const t of treasures) {
+      const idx = this.player.hand.indexOf(t);
+      this.player.hand.splice(idx, 1);
+      this.player.played.push(t);
+      this.coins += t.coins || 0;
+    }
+    if (treasures.length > 0) {
+      this.addLog('💰 財宝' + treasures.length + '枚を自動プレイ → ' + this.coins + 'コイン');
+    }
   }
 
   endPlayerTurn() {
@@ -413,6 +429,9 @@ class GameState {
     this.phase   = PHASE.ACTION;
     this.turn++;
     this.addLog('═══ ターン ' + this.turn + ' 開始（あなた）═══');
+    // アクションカードがなければ購入フェーズへ自動スキップ
+    const hasAction = this.player.hand.some(c => c.type === TYPE.ACTION);
+    if (!hasAction) this.enterBuyPhase();
   }
 
   // ── 勝利判定 ───────────────────────────────────────────
@@ -661,10 +680,19 @@ function renderStatus(game) {
   phaseEl.className   = 'phase-label phase-' + game.phase;
 }
 
+function _handSortOrder(card) {
+  if (card.type === TYPE.ACTION)   return 0;
+  if (card.type === TYPE.TREASURE || card.type === TYPE.STARTING) return 1;
+  return 2;
+}
+
 function renderHand(game, onPlayCard) {
   const container = document.getElementById('player-hand');
   container.innerHTML = '';
-  for (const card of game.player.hand) {
+  const sorted = game.player.hand.slice().sort(function(a, b) {
+    return _handSortOrder(a) - _handSortOrder(b);
+  });
+  for (const card of sorted) {
     const playable = isPlayable(card, game);
     const el = makeCardEl(card, { uid: card.uid, faded: !playable });
     if (playable) {
@@ -894,6 +922,7 @@ function onPlayCard(cardUid) {
     showScryModal(result.cards, function(order) {
       game.commitScry(order);
       renderAll(game);
+      checkAutoAdvance();
     });
     return;
   }
@@ -903,6 +932,7 @@ function onPlayCard(cardUid) {
     return;
   }
   renderAll(game);
+  checkAutoAdvance();
 }
 
 function onBuyCard(cardId) {
@@ -917,6 +947,7 @@ function onBuyCard(cardId) {
     upgradeWaitingGain = false;
     hideUpgradeMsg();
     renderAll(game);
+    checkAutoAdvance();
     return;
   }
 
@@ -926,6 +957,45 @@ function onBuyCard(cardId) {
     return;
   }
   renderAll(game);
+  checkAutoAdvance();
+}
+
+function doEndTurn() {
+  if (!game || game.phase !== PHASE.BUY) return;
+  const result = game.endPlayerTurn();
+  renderAll(game);
+  if (result.gameOver) return;
+
+  setTimeout(function() {
+    runAITurn(game);
+    const gameOver = game._checkGameOver();
+    if (!gameOver) game.startPlayerTurn();
+    renderAll(game);
+    checkAutoAdvance();
+  }, 700);
+}
+
+function checkAutoAdvance() {
+  if (!game || game.phase === PHASE.GAME_OVER) return;
+  if (game.upgradeMode || game.scryMode || game.upgradeMax > 0) return;
+
+  if (game.phase === PHASE.ACTION) {
+    const hasPlayable = game.actions > 0 &&
+      game.player.hand.some(function(c) { return c.type === TYPE.ACTION; });
+    if (!hasPlayable) {
+      game.enterBuyPhase();
+      renderAll(game);
+      setTimeout(checkAutoAdvance, 0);
+    }
+    return;
+  }
+
+  if (game.phase === PHASE.BUY) {
+    const canBuyAny = game.buys > 0 && Object.keys(game.supply).some(function(id) {
+      return (game.supply[id] || 0) > 0 && CARD_DEFS[id] && CARD_DEFS[id].cost <= game.coins;
+    });
+    if (!canBuyAny) doEndTurn();
+  }
 }
 
 function showToast(msg) {
@@ -946,6 +1016,7 @@ function startGame() {
   document.getElementById('gameover-overlay').classList.add('hidden');
   game.startPlayerTurn();
   renderAll(game);
+  checkAutoAdvance();
 }
 
 // ─── イベントリスナー ────────────────────────────────────
@@ -954,21 +1025,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (game.phase !== PHASE.ACTION) return;
     game.enterBuyPhase();
     renderAll(game);
+    checkAutoAdvance();
   });
 
-  document.getElementById('btn-end-turn').addEventListener('click', function() {
-    if (game.phase !== PHASE.BUY) return;
-    const result = game.endPlayerTurn();
-    renderAll(game);
-    if (result.gameOver) return;
-
-    setTimeout(function() {
-      runAITurn(game);
-      const gameOver = game._checkGameOver();
-      if (!gameOver) game.startPlayerTurn();
-      renderAll(game);
-    }, 700);
-  });
+  document.getElementById('btn-end-turn').addEventListener('click', doEndTurn);
 
   document.getElementById('btn-restart').addEventListener('click', startGame);
 
