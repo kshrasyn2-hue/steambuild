@@ -2,7 +2,7 @@
 //  世界の真理 — スチームパンク・デッキ構築ゲーム
 // ════════════════════════════════════════════════════════
 
-// ─── カード定義 ─────────────────────────────────────────
+// ─── 定数 ───────────────────────────────────────────────
 const TYPE = {
   TREASURE: 'treasure',
   VICTORY:  'victory',
@@ -17,75 +17,150 @@ const PHASE = {
   GAME_OVER:'game_over',
 };
 
-const CARD_DEFS = {
-  steam_copper: {
-    id: 'steam_copper', name: '蒸気銅貨', type: TYPE.TREASURE, cost: 0,
-    coins: 1, vp: 0, description: '+1コイン', emoji: '🪙',
-  },
-  steam_silver: {
-    id: 'steam_silver', name: '蒸気銀貨', type: TYPE.TREASURE, cost: 3,
-    coins: 2, vp: 0, description: '+2コイン', emoji: '⚙️',
-  },
-  steam_gold: {
-    id: 'steam_gold', name: '蒸気金貨', type: TYPE.TREASURE, cost: 6,
-    coins: 3, vp: 0, description: '+3コイン', emoji: '✨',
-  },
-  observation_note: {
-    id: 'observation_note', name: '観測ノート', type: TYPE.STARTING, cost: 0,
-    coins: 0, vp: 1, description: '1VP（初期カード）', emoji: '📓',
-  },
-  truth_fragment: {
-    id: 'truth_fragment', name: '真理の断片', type: TYPE.VICTORY, cost: 2,
-    coins: 0, vp: 1, description: '1VP', emoji: '🔮',
-  },
-  truth_tome: {
-    id: 'truth_tome', name: '真理の書', type: TYPE.VICTORY, cost: 5,
-    coins: 0, vp: 3, description: '3VP', emoji: '📚',
-  },
-  world_truth: {
-    id: 'world_truth', name: '世界の真理', type: TYPE.VICTORY, cost: 8,
-    coins: 0, vp: 6, description: '6VP', emoji: '🌍',
-  },
-  alchemy_lab: {
-    id: 'alchemy_lab', name: '錬金術室', type: TYPE.ACTION, cost: 3,
-    coins: 0, vp: 0, actions: 1, draws: 2,
-    description: '+1アクション、+2ドロー', emoji: '⚗️',
-  },
-  steam_engine: {
-    id: 'steam_engine', name: '蒸気機関', type: TYPE.ACTION, cost: 4,
-    coins: 3, vp: 0, description: '+3コイン', emoji: '🔧',
-  },
-  clockwork_doll: {
-    id: 'clockwork_doll', name: '時計仕掛け人形', type: TYPE.ACTION, cost: 5,
-    coins: 0, vp: 0, actions: 2, draws: 1,
-    description: '+2アクション、+1ドロー', emoji: '🤖',
-  },
-  aether_scope: {
-    id: 'aether_scope', name: 'エーテル望遠鏡', type: TYPE.ACTION, cost: 3,
-    coins: 0, vp: 0, actions: 1, special: 'scry3',
-    description: '+1アクション、デッキ上位3枚を確認・並べ替え', emoji: '🔭',
-  },
-  inventors_workshop: {
-    id: 'inventors_workshop', name: '発明家の工房', type: TYPE.ACTION, cost: 4,
-    coins: 0, vp: 0, special: 'upgrade',
-    description: '手札1枚を廃棄し、コスト+2以下を獲得', emoji: '🏭',
-  },
-  airship_raid: {
-    id: 'airship_raid', name: '飛行船急襲', type: TYPE.ACTION, cost: 4,
-    coins: 2, vp: 0, special: 'attack',
-    description: '+2コイン、相手は3枚以下に捨て', emoji: '✈️',
-  },
-  analytical_engine: {
-    id: 'analytical_engine', name: '解析機関', type: TYPE.ACTION, cost: 5,
-    coins: 2, vp: 0, actions: 1, buys: 1,
-    description: '+1アクション、+1購入、+2コイン', emoji: '💻',
-  },
-  grand_observatory: {
-    id: 'grand_observatory', name: '大天文台', type: TYPE.ACTION, cost: 6,
-    coins: 0, vp: 0, actions: 1, draws: 3,
-    description: '+1アクション、+3ドロー', emoji: '🏛️',
-  },
+// ─── ランダムカード名生成プール ──────────────────────────
+var _adj  = ['蒸気','機械','歯車','煤煙','エーテル','電磁','時計','錬金',
+             '飛行','光学','磁力','黄金','水晶','鉄鋼','霧','熱','精密',
+             '高圧','真空','超合金','反重力','蒸発','螺旋','旋回'];
+var _noun = ['機関','望遠鏡','工房','人形','装置','砲台','炉','計算機',
+             '図書館','実験室','操縦室','気球','鍛冶場','観測台','羅針盤',
+             'タービン','ゴーレム','変換器','蒸留器','弁','回路','ピストン',
+             '発電機','推進器'];
+
+var _TREASURE_NAMES = {
+  steam_silver: ['銀製歯車','精錬銀貨','磨かれた銀','銀の証書','白銀の印章','精製銀塊'],
+  steam_gold:   ['黄金歯車','精錬金貨','黄金の証書','黄金印章','純金の紋章','精製金塊'],
 };
+var _VP_NAMES = {
+  truth_fragment: ['真理の断片','知識の欠片','解読の糸口','謎の断片','秘密の欠片','観測記録'],
+  truth_tome:     ['真理の書','知識の典籍','謎解きの書','解析記録','秘密の書','研究論文'],
+  world_truth:    ['世界の真理','究極の知識','宇宙の秘密','万物の理','創造の真理','最終解答'],
+};
+
+// ─── アクション効果プール（コスト帯別）────────────────────
+var _EFFECT_POOL = {
+  c3: [
+    { coins:0, actions:1, draws:2, buys:0, special:null,      emoji:'📚', desc:'+1アクション、+2ドロー' },
+    { coins:2, actions:1, draws:0, buys:0, special:null,      emoji:'⚙️', desc:'+1アクション、+2コイン' },
+    { coins:0, actions:1, draws:0, buys:0, special:'scry3',   emoji:'🔭', desc:'+1アクション、デッキ上位3枚を確認・並べ替え' },
+    { coins:3, actions:0, draws:0, buys:0, special:null,      emoji:'💰', desc:'+3コイン' },
+    { coins:1, actions:1, draws:1, buys:0, special:null,      emoji:'🔩', desc:'+1アクション、+1コイン、+1ドロー' },
+    { coins:0, actions:0, draws:3, buys:0, special:null,      emoji:'🗂️', desc:'+3ドロー' },
+  ],
+  c4: [
+    { coins:3, actions:0, draws:0, buys:0, special:null,      emoji:'🔧', desc:'+3コイン' },
+    { coins:2, actions:0, draws:0, buys:1, special:null,      emoji:'🛒', desc:'+2コイン、+1購入' },
+    { coins:0, actions:2, draws:0, buys:0, special:null,      emoji:'⚡', desc:'+2アクション' },
+    { coins:2, actions:0, draws:0, buys:0, special:'attack',  emoji:'✈️', desc:'+2コイン、相手は3枚以下に捨て' },
+    { coins:0, actions:0, draws:0, buys:0, special:'upgrade', emoji:'🏭', desc:'手札1枚を廃棄し、コスト+2以下を獲得' },
+    { coins:0, actions:2, draws:1, buys:0, special:null,      emoji:'🤖', desc:'+2アクション、+1ドロー' },
+    { coins:4, actions:0, draws:0, buys:0, special:null,      emoji:'💎', desc:'+4コイン' },
+    { coins:1, actions:1, draws:1, buys:0, special:null,      emoji:'🔩', desc:'+1アクション、+1コイン、+1ドロー' },
+  ],
+  c5: [
+    { coins:2, actions:1, draws:0, buys:1, special:null,      emoji:'💻', desc:'+1アクション、+1購入、+2コイン' },
+    { coins:0, actions:1, draws:3, buys:0, special:null,      emoji:'🌟', desc:'+1アクション、+3ドロー' },
+    { coins:1, actions:0, draws:2, buys:1, special:null,      emoji:'📖', desc:'+1コイン、+2ドロー、+1購入' },
+    { coins:2, actions:2, draws:0, buys:0, special:null,      emoji:'🕰️', desc:'+2アクション、+2コイン' },
+    { coins:4, actions:0, draws:0, buys:0, special:null,      emoji:'💎', desc:'+4コイン' },
+  ],
+  c6: [
+    { coins:0, actions:1, draws:3, buys:0, special:null,      emoji:'🏛️', desc:'+1アクション、+3ドロー' },
+    { coins:4, actions:1, draws:0, buys:0, special:null,      emoji:'⚗️', desc:'+1アクション、+4コイン' },
+    { coins:2, actions:2, draws:2, buys:0, special:null,      emoji:'🏭', desc:'+2アクション、+2ドロー、+2コイン' },
+    { coins:3, actions:0, draws:0, buys:2, special:null,      emoji:'🛸', desc:'+3コイン、+2購入' },
+    { coins:0, actions:2, draws:3, buys:0, special:null,      emoji:'🌌', desc:'+2アクション、+3ドロー' },
+  ],
+};
+
+var _ACTION_SLOT_IDS = [
+  'alchemy_lab','steam_engine','clockwork_doll','aether_scope',
+  'inventors_workshop','airship_raid','analytical_engine','grand_observatory',
+];
+
+function _pickN(arr, n) {
+  var copy = arr.slice(), result = [];
+  while (result.length < n && copy.length > 0) {
+    var i = Math.floor(Math.random() * copy.length);
+    result.push(copy.splice(i, 1)[0]);
+  }
+  return result;
+}
+
+function _randName(used) {
+  var name, tries = 0;
+  do {
+    name = _adj[Math.floor(Math.random() * _adj.length)]
+         + _noun[Math.floor(Math.random() * _noun.length)];
+    tries++;
+  } while (used[name] && tries < 200);
+  used[name] = true;
+  return name;
+}
+
+function _pick1(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// ─── CARD_DEFS をゲームごとにランダム生成 ────────────────
+var CARD_DEFS = {};
+
+function generateCardDefs() {
+  CARD_DEFS = {
+    steam_copper: {
+      id:'steam_copper', name:'蒸気銅貨', type:TYPE.TREASURE, cost:0,
+      coins:1, vp:0, description:'+1コイン', emoji:'🪙',
+    },
+    steam_silver: {
+      id:'steam_silver', name:_pick1(_TREASURE_NAMES.steam_silver), type:TYPE.TREASURE, cost:3,
+      coins:2, vp:0, description:'+2コイン', emoji:'⚙️',
+    },
+    steam_gold: {
+      id:'steam_gold', name:_pick1(_TREASURE_NAMES.steam_gold), type:TYPE.TREASURE, cost:6,
+      coins:3, vp:0, description:'+3コイン', emoji:'✨',
+    },
+    observation_note: {
+      id:'observation_note', name:'観測ノート', type:TYPE.STARTING, cost:0,
+      coins:0, vp:1, description:'1VP（初期カード）', emoji:'📓',
+    },
+    truth_fragment: {
+      id:'truth_fragment', name:_pick1(_VP_NAMES.truth_fragment), type:TYPE.VICTORY, cost:2,
+      coins:0, vp:1, description:'1VP', emoji:'🔮',
+    },
+    truth_tome: {
+      id:'truth_tome', name:_pick1(_VP_NAMES.truth_tome), type:TYPE.VICTORY, cost:5,
+      coins:0, vp:3, description:'3VP', emoji:'📚',
+    },
+    world_truth: {
+      id:'world_truth', name:_pick1(_VP_NAMES.world_truth), type:TYPE.VICTORY, cost:8,
+      coins:0, vp:6, description:'6VP', emoji:'🌍',
+    },
+  };
+
+  // アクションカード8枚: コスト帯 2+3+2+1 でランダム選択
+  var picked = shuffle(
+    _pickN(_EFFECT_POOL.c3, 2).concat(
+    _pickN(_EFFECT_POOL.c4, 3),
+    _pickN(_EFFECT_POOL.c5, 2),
+    _pickN(_EFFECT_POOL.c6, 1))
+  );
+  var usedNames = {};
+  for (var i = 0; i < _ACTION_SLOT_IDS.length; i++) {
+    var id  = _ACTION_SLOT_IDS[i];
+    var eff = picked[i];
+    CARD_DEFS[id] = {
+      id:          id,
+      name:        _randName(usedNames),
+      type:        TYPE.ACTION,
+      cost:        eff.cost,
+      coins:       eff.coins   || 0,
+      vp:          0,
+      actions:     eff.actions || 0,
+      draws:       eff.draws   || 0,
+      buys:        eff.buys    || 0,
+      special:     eff.special || null,
+      description: eff.desc,
+      emoji:       eff.emoji,
+    };
+  }
+}
 
 const SUPPLY_CONFIG = {
   steam_silver:       30,
@@ -227,13 +302,13 @@ class GameState {
     this.buys    += card.buys    || 0;
     if (card.draws) this._drawCards(this.player, card.draws);
 
-    if (card.special === 'scry3')   return this._startScry();
-    if (card.special === 'upgrade') return this._startUpgrade();
-    if (card.special === 'attack')  this._applyAttack(this.ai, 'AI');
+    if (card.special === 'scry3')   return this._startScry(card.name);
+    if (card.special === 'upgrade') return this._startUpgrade(card.name);
+    if (card.special === 'attack')  this._applyAttack(this.ai, 'AI', card.name);
     return { ok: true };
   }
 
-  _startScry() {
+  _startScry(cardName) {
     const top = [];
     for (let i = 0; i < 3; i++) {
       if (this.player.deck.length === 0) {
@@ -244,7 +319,7 @@ class GameState {
     }
     this.scryCards = top;
     this.scryMode  = true;
-    this.addLog('🔭 エーテル望遠鏡: デッキ上位' + top.length + '枚を確認中...');
+    this.addLog('🔭 ' + (cardName || 'スクライ') + ': デッキ上位' + top.length + '枚を確認中...');
     return { ok: true, scry: true, cards: top };
   }
 
@@ -258,9 +333,9 @@ class GameState {
     return { ok: true };
   }
 
-  _startUpgrade() {
+  _startUpgrade(cardName) {
     this.upgradeMode = true;
-    this.addLog('🏭 発明家の工房: 廃棄するカードを手札から選んでください');
+    this.addLog('🏭 ' + (cardName || 'アップグレード') + ': 廃棄するカードを手札から選んでください');
     return { ok: true, upgrade: true };
   }
 
@@ -287,11 +362,11 @@ class GameState {
     return { ok: true };
   }
 
-  _applyAttack(target, targetName) {
+  _applyAttack(target, targetName, cardName) {
     while (target.hand.length > 3) {
       target.discard.push(target.hand.pop());
     }
-    this.addLog('✈️ 飛行船急襲: ' + targetName + 'の手札を3枚に削減');
+    this.addLog((cardName ? '✈️ ' + cardName : '✈️ 攻撃') + ': ' + targetName + 'の手札を3枚に削減');
   }
 
   buyCard(cardId) {
@@ -375,130 +450,150 @@ class GameState {
 }
 
 // ─── AI ──────────────────────────────────────────────────
+function _scoreActionCard(card) {
+  return (card.coins   || 0) * 1.2
+       + (card.actions || 0) * 2.5
+       + (card.draws   || 0) * 1.5
+       + (card.buys    || 0) * 2.0
+       + (card.special === 'scry3'   ? 1.0 : 0)
+       + (card.special === 'upgrade' ? 2.5 : 0)
+       + (card.special === 'attack'  ? 1.5 : 0);
+}
+
+function _scoreCardForBuy(def, allCards) {
+  if (!def) return -Infinity;
+  if (def.id === 'world_truth') return 1000;
+  if (def.type === TYPE.VICTORY) return def.vp * 9 - def.cost;
+  if (def.type === TYPE.TREASURE) {
+    const cnt = allCards.filter(function(c) { return c.id === def.id; }).length;
+    const limit = Math.max(2, Math.floor((allCards.length || 1) / 5) + 1);
+    if (cnt >= limit) return -1;
+    return def.coins * 8 - def.cost * 1.5;
+  }
+  if (def.type === TYPE.ACTION) {
+    const cnt = allCards.filter(function(c) { return c.id === def.id; }).length;
+    if (cnt >= 2) return -1;
+    return _scoreActionCard(def) - def.cost * 0.4;
+  }
+  return 0;
+}
+
+function aiChooseBuy(supply, coins, allCards) {
+  if (coins >= 8 && (supply.world_truth || 0) > 0) return 'world_truth';
+  var bestId = null, bestScore = -Infinity;
+  for (var id in supply) {
+    if ((supply[id] || 0) <= 0) continue;
+    var def = CARD_DEFS[id];
+    if (!def || def.cost > coins || def.type === TYPE.STARTING) continue;
+    var score = _scoreCardForBuy(def, allCards);
+    if (score > bestScore) { bestScore = score; bestId = id; }
+  }
+  return bestId;
+}
+
+function aiChooseBestGain(supply, maxCost) {
+  var bestId = null, bestScore = -Infinity;
+  for (var id in supply) {
+    if ((supply[id] || 0) <= 0) continue;
+    var def = CARD_DEFS[id];
+    if (!def || def.cost > maxCost || def.type === TYPE.STARTING) continue;
+    var score = _scoreCardForBuy(def, []);
+    if (score > bestScore) { bestScore = score; bestId = id; }
+  }
+  return bestId;
+}
+
 function runAITurn(game) {
-  const ai = game.ai;
+  var ai = game.ai;
   game.addLog('═══ AIのターン ═══');
   game._drawHand(ai, 5);
   game.addLog('AI: 5枚ドロー（手札' + ai.hand.length + '枚）');
 
-  // アクションフェーズ
-  const actionPriority = [
-    'analytical_engine', 'grand_observatory', 'clockwork_doll',
-    'alchemy_lab', 'steam_engine', 'aether_scope', 'airship_raid', 'inventors_workshop',
-  ];
+  var actionsLeft = 1;
+  var aiCoins = 0;
+  var aiBuys  = 0;
 
-  let actionsLeft = 1;
-  let aiCoins = 0;
-  let aiBuys  = 0;
-
-  let acted = true;
+  var acted = true;
   while (acted && actionsLeft > 0) {
     acted = false;
-    for (const id of actionPriority) {
-      const idx = ai.hand.findIndex(c => c.id === id);
-      if (idx === -1) continue;
-      const card = ai.hand.splice(idx, 1)[0];
-      ai.played.push(card);
-      actionsLeft--;
-      actionsLeft += card.actions || 0;
-      aiCoins     += card.coins   || 0;
-      aiBuys      += card.buys    || 0;
-      if (card.draws) game._drawCards(ai, card.draws);
+    var actionCards = ai.hand
+      .filter(function(c) { return c.type === TYPE.ACTION; })
+      .sort(function(a, b) { return _scoreActionCard(b) - _scoreActionCard(a); });
+    if (actionCards.length === 0) break;
+    var card = actionCards[0];
+    var idx = ai.hand.findIndex(function(c) { return c.uid === card.uid; });
+    ai.hand.splice(idx, 1);
+    ai.played.push(card);
+    actionsLeft--;
+    actionsLeft += card.actions || 0;
+    aiCoins     += card.coins   || 0;
+    aiBuys      += card.buys    || 0;
+    if (card.draws) game._drawCards(ai, card.draws);
 
-      if (card.special === 'attack') {
-        while (game.player.hand.length > 3) {
-          game.player.discard.push(game.player.hand.pop());
-        }
-        game.addLog('✈️ 飛行船急襲: あなたの手札が3枚に削減された！');
+    if (card.special === 'attack') {
+      while (game.player.hand.length > 3) {
+        game.player.discard.push(game.player.hand.pop());
       }
-      if (card.special === 'upgrade') {
-        const trashable = ai.hand.filter(c => c.vp === 0 && c.type !== TYPE.VICTORY);
-        if (trashable.length > 0) {
-          trashable.sort((a, b) => a.cost - b.cost);
-          const toTrash = trashable[0];
-          const ti = ai.hand.findIndex(c => c.uid === toTrash.uid);
-          ai.hand.splice(ti, 1);
-          const maxCost = toTrash.cost + 2;
-          const gainId  = aiChooseBestGain(game.supply, maxCost);
-          if (gainId) {
-            game.supply[gainId]--;
-            ai.discard.push(makeCardInstance(gainId));
-            game.addLog('🏭 AI: ' + toTrash.name + 'を廃棄 → ' + CARD_DEFS[gainId].name + 'を獲得');
-          }
-        }
-      }
-
-      game.addLog('AI ▶ ' + card.emoji + ' ' + card.name + ' をプレイ（' + card.description + '）');
-      acted = true;
-      break;
+      game.addLog('✈️ ' + card.name + ': あなたの手札が3枚に削減された！');
     }
+    if (card.special === 'upgrade') {
+      var trashable = ai.hand.filter(function(c) { return c.vp === 0 && c.type !== TYPE.VICTORY; });
+      if (trashable.length > 0) {
+        trashable.sort(function(a, b) { return a.cost - b.cost; });
+        var toTrash = trashable[0];
+        var ti = ai.hand.findIndex(function(c) { return c.uid === toTrash.uid; });
+        ai.hand.splice(ti, 1);
+        var maxCost = toTrash.cost + 2;
+        var gainId  = aiChooseBestGain(game.supply, maxCost);
+        if (gainId) {
+          game.supply[gainId]--;
+          ai.discard.push(makeCardInstance(gainId));
+          game.addLog('🏭 AI: ' + toTrash.name + 'を廃棄 → ' + CARD_DEFS[gainId].name + 'を獲得');
+        }
+      }
+    }
+
+    game.addLog('AI ▶ ' + card.emoji + ' ' + card.name + ' をプレイ（' + card.description + '）');
+    acted = true;
   }
 
   // 財宝をすべて使用
-  const treasures = ai.hand.filter(c => c.type === TYPE.TREASURE);
-  let treasureCoins = 0;
-  for (const t of treasures) {
-    const ti = ai.hand.findIndex(c => c.uid === t.uid);
-    ai.hand.splice(ti, 1);
+  var treasures = ai.hand.filter(function(c) { return c.type === TYPE.TREASURE; });
+  var treasureCoins = 0;
+  for (var ti2 = 0; ti2 < treasures.length; ti2++) {
+    var t = treasures[ti2];
+    var tidx = ai.hand.findIndex(function(c) { return c.uid === t.uid; });
+    ai.hand.splice(tidx, 1);
     ai.played.push(t);
     treasureCoins += t.coins || 0;
   }
-  const totalCoins = aiCoins + treasureCoins;
+  var totalCoins = aiCoins + treasureCoins;
   if (treasures.length > 0) {
     game.addLog('AI: 財宝' + treasures.length + '枚使用 → ' + totalCoins + 'コイン');
   }
 
   // 購入
-  let buysLeft = 1 + aiBuys;
-  let coinsLeft = totalCoins;
-  const allAI = [...ai.deck, ...ai.discard];
+  var buysLeft = 1 + aiBuys;
+  var coinsLeft = totalCoins;
+  var allAI = ai.deck.concat(ai.discard);
 
   while (buysLeft > 0) {
-    const buyId = aiChooseBuy(game.supply, coinsLeft, allAI);
+    var buyId = aiChooseBuy(game.supply, coinsLeft, allAI);
     if (!buyId) break;
-    const def = CARD_DEFS[buyId];
+    var buyDef = CARD_DEFS[buyId];
     game.supply[buyId]--;
     ai.discard.push(makeCardInstance(buyId));
-    allAI.push(Object.assign({}, def));
-    coinsLeft -= def.cost;
+    allAI.push(Object.assign({}, buyDef));
+    coinsLeft -= buyDef.cost;
     buysLeft--;
-    game.addLog('AI 🛒 ' + def.emoji + ' ' + def.name + '（コスト' + def.cost + '）を購入');
+    game.addLog('AI 🛒 ' + buyDef.emoji + ' ' + buyDef.name + '（コスト' + buyDef.cost + '）を購入');
   }
 
   // クリーンアップ
-  ai.discard.push(...ai.hand, ...ai.played);
+  ai.discard.push.apply(ai.discard, ai.hand.concat(ai.played));
   ai.hand   = [];
   ai.played = [];
   game.addLog('AI: ターン終了');
-}
-
-function aiChooseBuy(supply, coins, allCards) {
-  const silverCount = allCards.filter(c => c.id === 'steam_silver').length;
-  const analyticCount = allCards.filter(c => c.id === 'analytical_engine').length;
-  const obsCount = allCards.filter(c => c.id === 'grand_observatory').length;
-  const engineCount = allCards.filter(c => c.id === 'steam_engine').length;
-  const deckSize = allCards.length || 1;
-
-  if (coins >= 8 && (supply.world_truth || 0) > 0) return 'world_truth';
-  if (coins >= 5 && (supply.analytical_engine || 0) > 0 && analyticCount < 2) return 'analytical_engine';
-  if (coins >= 6 && (supply.grand_observatory || 0) > 0 && obsCount < 1) return 'grand_observatory';
-  if (coins >= 6 && (supply.steam_gold || 0) > 0) return 'steam_gold';
-  if (coins >= 5 && (supply.truth_tome || 0) > 0) return 'truth_tome';
-  if (coins >= 4 && (supply.steam_engine || 0) > 0 && engineCount < 1) return 'steam_engine';
-  if (coins >= 3 && (supply.steam_silver || 0) > 0 && silverCount < Math.floor(deckSize / 4)) return 'steam_silver';
-  if (coins >= 2 && (supply.truth_fragment || 0) > 0) return 'truth_fragment';
-  return null;
-}
-
-function aiChooseBestGain(supply, maxCost) {
-  const priority = [
-    'grand_observatory', 'analytical_engine', 'truth_tome', 'steam_gold',
-    'steam_engine', 'clockwork_doll', 'alchemy_lab', 'steam_silver', 'truth_fragment',
-  ];
-  for (const id of priority) {
-    if ((supply[id] || 0) > 0 && CARD_DEFS[id].cost <= maxCost) return id;
-  }
-  return null;
 }
 
 // ─── UI ──────────────────────────────────────────────────
@@ -845,6 +940,7 @@ function showToast(msg) {
 }
 
 function startGame() {
+  generateCardDefs();
   game = new GameState();
   upgradeWaitingGain = false;
   document.getElementById('gameover-overlay').classList.add('hidden');
