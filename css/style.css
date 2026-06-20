@@ -1,0 +1,599 @@
+/* ─── スチームパンク カラーパレット ─────────────────────── */
+:root {
+  --bg:         #120b06;
+  --panel-bg:   #1e1208;
+  --card-bg:    #2a1a0e;
+  --card-border:#7a5520;
+  --gold:       #c9942a;
+  --gold-light: #f0c060;
+  --cream:      #e8d5a3;
+  --muted:      #8a7055;
+  --red:        #c0392b;
+  --green:      #27ae60;
+  --blue:       #2980b9;
+  --radius:     6px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* タッチ操作: ダブルタップズーム無効・ハイライト除去 */
+.card, .btn, .supply-card {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  overflow-x: hidden;
+  color: var(--cream);
+  font-family: Georgia, 'Times New Roman', serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── ヘッダー ─────────────────────────────────────────── */
+.game-header {
+  text-align: center;
+  padding: 12px 0 6px;
+  border-bottom: 2px solid var(--gold);
+  background: linear-gradient(180deg, #1e0e00 0%, #120b06 100%);
+}
+.title-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.game-header h1 {
+  font-size: 1.8rem;
+  color: var(--gold-light);
+  letter-spacing: 4px;
+  text-shadow: 0 0 12px #c9942a88;
+}
+.gear-icon {
+  font-size: 1.6rem;
+  color: var(--gold);
+  animation: spin 8s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.subtitle {
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-top: 2px;
+}
+
+/* ─── アプリレイアウト ──────────────────────────────────── */
+#app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+.panel-title {
+  font-size: 0.78rem;
+  color: var(--gold);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #3a2510;
+  padding-bottom: 4px;
+}
+
+/* ─── AIエリア ──────────────────────────────────────────── */
+.ai-area { padding: 8px 14px; }
+.ai-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.ai-stats strong { color: var(--cream); }
+.vp-badge {
+  margin-left: auto;
+  background: #2a1a00;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  padding: 2px 10px;
+  color: var(--gold-light);
+  font-size: 0.9rem;
+}
+
+/* ─── サプライ ──────────────────────────────────────────── */
+.supply-section { margin-bottom: 10px; }
+.supply-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.supply-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ─── カード共通 ─────────────────────────────────────────── */
+.card {
+  position: relative;
+  width: 90px;
+  min-height: 120px;
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 6px 5px;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  user-select: none;
+}
+.card::before {
+  content: '⚙';
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  font-size: 0.6rem;
+  color: #3a2510;
+  opacity: 0.6;
+}
+
+/* カードタイプ別スタイル */
+.card-treasure { border-color: #a07830; background: #251500; }
+.card-victory  { border-color: #4a7a4a; background: #0e1e0e; }
+.card-action   { border-color: #2a5080; background: #0a1525; }
+
+.card-cost {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: var(--gold);
+  background: #1a0e00;
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  padding: 0 4px;
+  min-width: 18px;
+  text-align: center;
+}
+.card-emoji { font-size: 1.4rem; margin-top: 14px; }
+.card-name  { font-size: 0.65rem; color: var(--cream); text-align: center; font-weight: bold; }
+.card-desc  { font-size: 0.57rem; color: var(--muted); text-align: center; line-height: 1.3; }
+.card-vp {
+  position: absolute;
+  bottom: 4px;
+  left: 5px;
+  font-size: 0.65rem;
+  color: #80c080;
+  font-weight: bold;
+}
+.supply-count {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+/* ホバー・インタラクション */
+.buyable, .card[data-uid] {
+  cursor: pointer;
+}
+.buyable:hover, .card[data-uid]:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 6px 18px #c9942a55;
+  border-color: var(--gold);
+  z-index: 10;
+}
+.exhausted {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.faded { opacity: 0.5; cursor: not-allowed; }
+.selected { border-color: var(--gold-light); box-shadow: 0 0 12px var(--gold); }
+
+/* ─── 中段（プレイエリア + ログ） ──────────────────────── */
+.middle-row {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 8px;
+}
+.card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 60px;
+}
+
+/* ─── ゲームログ ─────────────────────────────────────────── */
+.log-area { overflow: hidden; }
+#game-log {
+  height: 160px;
+  overflow-y: auto;
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+#game-log::-webkit-scrollbar { width: 5px; }
+#game-log::-webkit-scrollbar-track { background: #1a0e00; }
+#game-log::-webkit-scrollbar-thumb { background: #5a3a10; border-radius: 3px; }
+.log-line {
+  padding: 1px 0;
+  border-bottom: 1px solid #1e1208;
+  color: var(--muted);
+}
+.log-line:first-child { color: var(--cream); }
+
+/* ─── プレイヤーエリア ──────────────────────────────────── */
+.player-stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.stat-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #1a0e00;
+  border: 1px solid #3a2510;
+  border-radius: 5px;
+  padding: 4px 10px;
+  min-width: 52px;
+}
+.stat-label { font-size: 0.6rem; color: var(--muted); }
+.stat-val   { font-size: 1.1rem; color: var(--cream); font-weight: bold; }
+.stat-block.coins   .stat-val { color: var(--gold-light); }
+.stat-block.actions .stat-val { color: #7ab4e0; }
+.stat-block.buys    .stat-val { color: #a0e0a0; }
+
+.phase-label {
+  margin-left: auto;
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-style: italic;
+  letter-spacing: 1px;
+}
+.phase-action   { background: #0a2040; color: #80b8e0; border: 1px solid #2a5080; }
+.phase-buy      { background: #201000; color: var(--gold); border: 1px solid var(--gold); }
+.phase-ai_turn  { background: #1a0a20; color: #c080f0; border: 1px solid #603080; }
+.phase-game_over{ background: #200000; color: #f08080; border: 1px solid #800000; }
+
+/* 手札 */
+.player-hand { min-height: 130px; }
+
+/* ボタン */
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 5px;
+  font-family: Georgia, serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.15s, box-shadow 0.15s;
+  letter-spacing: 1px;
+}
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-primary {
+  background: linear-gradient(135deg, #8a5a10, #c9942a);
+  color: #1a0800;
+  font-weight: bold;
+  box-shadow: 0 2px 8px #c9942a44;
+}
+.btn-primary:not(:disabled):hover { box-shadow: 0 4px 16px #c9942a88; }
+.btn-secondary {
+  background: #1e1208;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+}
+.btn-secondary:not(:disabled):hover { background: #2a1a08; }
+
+.deck-info {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.deck-info strong { color: var(--cream); }
+
+/* ─── オーバーレイ共通 ──────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #00000099;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(3px);
+}
+.overlay.hidden { display: none; }
+
+.overlay-box {
+  background: #1e1208;
+  border: 2px solid var(--gold);
+  border-radius: 10px;
+  padding: 32px 40px;
+  text-align: center;
+  max-width: 600px;
+  width: 90vw;
+  box-shadow: 0 0 40px #c9942a44;
+}
+.overlay-box h1 { font-size: 1.4rem; margin: 12px 0; }
+.overlay-box h2 { color: var(--gold); margin-bottom: 12px; }
+.overlay-box p  { color: var(--muted); margin-bottom: 20px; }
+.gear-deco { font-size: 3rem; color: var(--gold); animation: spin 4s linear infinite; }
+
+.gameover-win  { color: var(--gold-light); }
+.gameover-lose { color: #e08080; }
+.gameover-draw { color: #80c0c0; }
+
+/* スクライ */
+.scry-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+.scry-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--gold);
+  color: #1a0800;
+  font-size: 0.8rem;
+  font-weight: bold;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+.scry-badge.hidden { display: none; }
+
+/* ─── アップグレードメッセージ ──────────────────────────── */
+.upgrade-msg {
+  background: #1a0a30;
+  border: 1px solid #6040a0;
+  border-radius: 5px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  color: #c090f0;
+  margin-bottom: 8px;
+}
+.upgrade-msg.hidden { display: none; }
+
+/* ─── トースト通知 ───────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2a0a0a;
+  border: 1px solid var(--red);
+  color: #f08080;
+  padding: 8px 24px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  z-index: 200;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.toast.show { opacity: 1; }
+.toast.hidden { display: none; }
+
+/* ─── スクロールバー（全体） ─────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 3px; }
+
+/* ─── サプライタブ（デスクトップでは非表示） ────────────── */
+.supply-tabs { display: none; }
+
+/* ─── モバイル: 一画面固定レイアウト（〜767px）────────── */
+@media (max-width: 767px) {
+
+  /* タブで非表示になるセクション */
+  .hidden-tab { display: none !important; }
+
+  /* ページ全体のスクロールを禁止 */
+  html, body { height: 100%; overflow: hidden; }
+
+  /* アプリ全体を viewport に収める */
+  #app {
+    height: 100dvh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: env(safe-area-inset-top, 4px) 6px env(safe-area-inset-bottom, 4px) 6px;
+    gap: 3px;
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  /* ─── 各セクションの高さ配分 ─── */
+  .game-header { flex: 0 0 auto; padding: 4px 0 2px; }
+  .ai-area     { flex: 0 0 auto; padding: 4px 10px; }
+  .supply-area { flex: 0 0 auto; padding: 5px 8px; }
+  .middle-row  { flex: 1 1 0; min-height: 0; display: block; overflow: hidden; }
+  .log-area    { height: 100%; padding: 5px 8px; }
+  #game-log    { height: calc(100% - 24px); font-size: 0.67rem; }
+  .play-area   { display: none; }
+  .player-area { flex: 0 0 auto; padding: 5px 8px 4px; }
+
+  /* ─── ヘッダー ─── */
+  .game-header h1 { font-size: 1.05rem; letter-spacing: 2px; }
+  .gear-icon { font-size: 0.95rem; }
+  .subtitle  { font-size: 0.6rem; }
+
+  /* ─── AIエリア ─── */
+  .ai-stats { gap: 10px; font-size: 0.7rem; }
+  .ai-stats .vp-badge { font-size: 0.76rem; padding: 1px 8px; }
+
+  /* ─── サプライタブ ─── */
+  .supply-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 5px;
+  }
+  .supply-tab {
+    flex: 1;
+    padding: 5px 4px;
+    background: #1a0e00;
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    color: var(--muted);
+    font-family: Georgia, serif;
+    font-size: 0.7rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .supply-tab.active {
+    background: #2a1a08;
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* モバイルサプライ: 1行フラット横スクロール */
+  .mobile-supply-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 5px;
+    padding-bottom: 2px;
+    scroll-snap-type: x proximity;
+  }
+  .mobile-supply-row .card { flex: 0 0 auto; scroll-snap-align: start; }
+  .mobile-supply-row::-webkit-scrollbar { display: none; }
+
+  /* ─── カードサイズ（モバイル標準） ─── */
+  .card {
+    width: 64px;
+    min-height: 90px;
+    padding: 4px 3px;
+  }
+  .card-cost    { font-size: 0.64rem; padding: 0 3px; }
+  .card-emoji   { font-size: 1.05rem; margin-top: 10px; }
+  .card-name    { font-size: 0.56rem; }
+  .card-desc    { font-size: 0.49rem; line-height: 1.25; }
+  .supply-count { font-size: 0.58rem; }
+  .card-vp      { font-size: 0.58rem; }
+
+  /* 手札パネルタイトルは省略 */
+  .player-area .panel-title { display: none; }
+  .panel-title { font-size: 0.68rem; margin-bottom: 4px; padding-bottom: 3px; }
+
+  /* ─── 手札（横スクロール） ─── */
+  .player-hand {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    gap: 5px;
+    padding-bottom: 2px;
+    scroll-snap-type: x proximity;
+  }
+  .player-hand .card { flex: 0 0 auto; scroll-snap-align: start; }
+  .player-hand::-webkit-scrollbar { display: none; }
+
+  /* ─── ステータスバー ─── */
+  .player-stats { gap: 4px; margin-bottom: 4px; }
+  .stat-block   { min-width: 37px; padding: 2px 4px; }
+  .stat-label   { font-size: 0.51rem; }
+  .stat-val     { font-size: 0.92rem; }
+  .vp-badge     { font-size: 0.76rem; padding: 1px 7px; }
+  .phase-label  { font-size: 0.63rem; padding: 2px 6px; }
+
+  /* ─── ボタン ─── */
+  .player-controls { gap: 5px; margin-top: 4px; }
+  .btn {
+    flex: 1 1 0;
+    padding: 9px 6px;
+    font-size: 0.76rem;
+    min-height: 40px;
+  }
+  .deck-info { font-size: 0.66rem; }
+
+  /* ─── アップグレードメッセージ ─── */
+  .upgrade-msg { font-size: 0.7rem; padding: 3px 8px; margin-bottom: 3px; }
+
+  /* ─── オーバーレイ ─── */
+  .overlay-box { padding: 20px 16px; }
+  .overlay-box h1 { font-size: 1.05rem; }
+  .overlay-box p  { font-size: 0.82rem; }
+  .gear-deco  { font-size: 2.2rem; }
+  .scry-row   { gap: 8px; }
+}
+
+/* ─── iPhone SE 第3世代（375×667）─────────────────────── */
+@media (max-width: 390px) {
+  #app { gap: 2px; }
+
+  /* ヘッダー: 最小化 */
+  .game-header { padding: 2px 0 1px; }
+  .game-header h1 { font-size: 0.88rem; letter-spacing: 1px; }
+  .subtitle { display: none; }
+  .gear-icon { font-size: 0.78rem; }
+  .title-block { gap: 8px; }
+
+  /* AI エリア */
+  .ai-area { padding: 2px 8px; }
+  .ai-stats { font-size: 0.63rem; gap: 7px; }
+  .ai-stats .vp-badge { font-size: 0.68rem; padding: 0px 5px; }
+
+  /* サプライ */
+  .supply-area { padding: 3px 6px; }
+  .supply-tabs { margin-bottom: 3px; gap: 4px; }
+  .supply-tab  { font-size: 0.63rem; padding: 4px 3px; }
+
+  /* カード: iPhone SE 用最小サイズ */
+  .card {
+    width: 56px;
+    min-height: 80px;
+    padding: 3px 2px;
+  }
+  .card-cost    { font-size: 0.57rem; padding: 0 2px; }
+  .card-emoji   { font-size: 0.88rem; margin-top: 9px; }
+  .card-name    { font-size: 0.49rem; }
+  .card-desc    { font-size: 0.42rem; line-height: 1.2; }
+  .supply-count { font-size: 0.5rem; }
+  .card-vp      { font-size: 0.5rem; }
+
+  /* プレイヤーエリア */
+  .player-area { padding: 3px 6px 2px; }
+  .player-stats { gap: 3px; margin-bottom: 3px; }
+  .stat-block   { min-width: 31px; padding: 1px 3px; }
+  .stat-val     { font-size: 0.8rem; }
+  .stat-label   { font-size: 0.46rem; }
+  .phase-label  { font-size: 0.56rem; padding: 1px 4px; }
+  .vp-badge     { font-size: 0.66rem; padding: 0px 5px; }
+
+  .player-controls { gap: 4px; margin-top: 3px; }
+  .btn { padding: 8px 5px; font-size: 0.68rem; min-height: 34px; }
+  .deck-info { font-size: 0.58rem; }
+
+  .mobile-supply-row { gap: 4px; }
+  .player-hand { gap: 4px; }
+}

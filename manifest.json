@@ -1,0 +1,20 @@
+{
+  "name": "世界の真理 — スチームパンク・デッキ構築",
+  "short_name": "世界の真理",
+  "description": "スチームパンクの世界で真理を解明するデッキ構築ゲーム",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#120b06",
+  "theme_color": "#c9942a",
+  "orientation": "portrait-primary",
+  "lang": "ja",
+  "categories": ["games"],
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

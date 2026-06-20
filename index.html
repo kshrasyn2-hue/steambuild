@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>世界の真理 — スチームパンク・デッキ構築ゲーム</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#c9942a" />
+
+  <!-- iOS Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="世界の真理" />
+  <link rel="apple-touch-icon" href="icons/icon.svg" />
+
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ゲームオーバーオーバーレイ -->
+<div id="gameover-overlay" class="hidden overlay">
+  <div class="overlay-box">
+    <div class="gear-deco">⚙</div>
+    <h1 id="gameover-title"></h1>
+    <p id="gameover-detail"></p>
+    <button id="btn-restart" class="btn btn-primary">もう一度プレイ</button>
+  </div>
+</div>
+
+<!-- スクライモーダル（エーテル望遠鏡） -->
+<div id="scry-modal" class="hidden overlay">
+  <div class="overlay-box">
+    <h2>🔭 エーテル望遠鏡</h2>
+    <p>先に引きたいカードから順にクリック（1番目 = デッキの一番上）</p>
+    <div id="scry-cards" class="scry-row"></div>
+    <button id="btn-scry-confirm" class="btn btn-primary">確認して戻す</button>
+  </div>
+</div>
+
+<!-- トースト通知 -->
+<div id="toast" class="hidden toast"></div>
+
+<!-- メインレイアウト -->
+<div id="app">
+
+  <!-- ヘッダー -->
+  <header class="game-header">
+    <div class="title-block">
+      <span class="gear-icon">⚙</span>
+      <h1>世界の真理</h1>
+      <span class="gear-icon">⚙</span>
+    </div>
+    <div class="subtitle">スチームパンク・デッキ構築ゲーム</div>
+  </header>
+
+  <!-- AIエリア -->
+  <section class="ai-area panel">
+    <div class="panel-title">⚙ AI（蒸気頭脳）</div>
+    <div class="ai-stats">
+      <span>手札: <strong id="ai-hand">0</strong>枚</span>
+      <span>デッキ: <strong id="ai-deck">0</strong>枚</span>
+      <span>捨て札: <strong id="ai-disc">0</strong>枚</span>
+      <span class="vp-badge">VP: <strong id="ai-vp">0</strong></span>
+    </div>
+  </section>
+
+  <!-- サプライ -->
+  <section class="supply-area panel">
+    <div class="panel-title">🏪 サプライ（購入エリア）</div>
+    <!-- モバイル用タブ -->
+    <div class="supply-tabs" id="supply-tabs">
+      <button class="supply-tab active" data-tab="vp-treasure">🏪 財宝・知識</button>
+      <button class="supply-tab" data-tab="action">⚗️ 発明品</button>
+    </div>
+    <div id="supply-cards"></div>
+  </section>
+
+  <!-- プレイエリア + ログ -->
+  <div class="middle-row">
+    <section class="play-area panel">
+      <div class="panel-title">▶ プレイエリア</div>
+      <div id="play-area" class="card-row"></div>
+    </section>
+
+    <section class="log-area panel">
+      <div class="panel-title">📜 ゲームログ</div>
+      <div id="game-log"></div>
+    </section>
+  </div>
+
+  <!-- プレイヤーエリア -->
+  <section class="player-area panel">
+    <!-- ステータスバー -->
+    <div class="player-stats">
+      <span class="stat-block">
+        <span class="stat-label">ターン</span>
+        <span id="stat-turn" class="stat-val">0</span>
+      </span>
+      <span class="stat-block coins">
+        <span class="stat-label">コイン</span>
+        <span id="stat-coins" class="stat-val">0</span>
+      </span>
+      <span class="stat-block actions">
+        <span class="stat-label">アクション</span>
+        <span id="stat-actions" class="stat-val">1</span>
+      </span>
+      <span class="stat-block buys">
+        <span class="stat-label">購入</span>
+        <span id="stat-buys" class="stat-val">1</span>
+      </span>
+      <span class="vp-badge">VP: <strong id="player-vp">0</strong></span>
+      <span id="phase-label" class="phase-label"></span>
+    </div>
+
+    <!-- アップグレード案内 -->
+    <div id="upgrade-msg" class="upgrade-msg hidden"></div>
+
+    <!-- 手札 -->
+    <div class="panel-title">🃏 あなたの手札</div>
+    <div id="player-hand" class="card-row player-hand"></div>
+
+    <!-- ボタン + デッキ情報 -->
+    <div class="player-controls">
+      <button id="btn-buy-phase" class="btn btn-secondary">購入フェーズへ →</button>
+      <button id="btn-end-turn"  class="btn btn-primary"   disabled>ターン終了</button>
+      <span class="deck-info">デッキ: <strong id="player-deck">0</strong>枚</span>
+      <span class="deck-info">捨て札: <strong id="player-disc">0</strong>枚</span>
+    </div>
+  </section>
+
+</div><!-- #app -->
+
+<script src="js/game.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./sw.js').catch(function() {});
+    });
+  }
+</script>
+</body>
+</html>
